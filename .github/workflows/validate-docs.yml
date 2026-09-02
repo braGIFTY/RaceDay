@@ -1,0 +1,49 @@
+name: Validate Repository Structure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check /docs folder exists
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "::error::docs/ folder is missing"
+            exit 1
+          fi
+          echo "docs/ folder found"
+
+      - name: Check ERD image exists
+        run: |
+          if [ ! -f "docs/raceday-erd.png" ] && [ ! -f "docs/raceday-erd.pdf" ]; then
+            echo "::error::ERD image (docs/raceday-erd.png or .pdf) is missing"
+            exit 1
+          fi
+          echo "ERD image found"
+
+      - name: Check endpoint plan exists
+        run: |
+          if [ ! -f "docs/endpoint-plan.md" ] && [ ! -f "docs/endpoint-plan.pdf" ]; then
+            echo "::error::Endpoint plan (docs/endpoint-plan.md or .pdf) is missing"
+            exit 1
+          fi
+          echo "Endpoint plan found"
+
+      - name: Check SQL script exists
+        run: |
+          if [ ! -f "docs/raceday-schema.sql" ]; then
+            echo "::error::SQL script (docs/raceday-schema.sql) is missing"
+            exit 1
+          fi
+          echo "SQL script found"
+
+      - name: All required files present
+        run: echo "Repository structure is valid."
