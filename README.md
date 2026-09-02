@@ -24,9 +24,7 @@ docs/
 
 A GitHub Actions workflow (`.github/workflows/validate-docs.yml`) runs on every push to confirm the `/docs` folder exists and contains the required files (ERD, endpoint plan, SQL script).
 
-<!-- TODO: paste a screenshot of the green build here once the workflow has run, e.g.
-![CI passing](docs/ci-success.png)
--->
+![CI passing](docs/ci-success.png) 
 
 ## Video Walkthrough
 
