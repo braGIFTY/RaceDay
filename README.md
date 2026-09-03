@@ -17,7 +17,7 @@ docs/
 ├── raceday-erd.pdf       # ERD, PDF version
 ├── endpoint-plan.md      # API Endpoint Plan (Section B)
 ├── raceday-schema.sql    # SQL database script (Section C)
-└── PART_1_DOCUMENT.docx  # Full planning document — reasoning + all three sections together
+└── RaceDay System Planning and Database.docx # Full planning document — reasoning + all three sections together
 ```
 
 ## CI/CD
