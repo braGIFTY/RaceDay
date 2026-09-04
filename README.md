@@ -36,5 +36,4 @@ A GitHub Actions workflow (`.github/workflows/validate-docs.yml`) runs on every 
 
 ## Video Walkthrough
 
-<!-- TODO: add the unlisted YouTube link once recorded -->
-[Part 1 video walkthrough](PASTE_YOUTUBE_LINK_HERE)
+[Part 1 video walkthrough](https://youtu.be/US8X2dPBVJo)
