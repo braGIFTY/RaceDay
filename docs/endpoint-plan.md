@@ -32,7 +32,7 @@ Endpoints are grouped into three tables — **Organiser**, **Participant**, and 
 | DELETE | /api/enrolments/{id} | *(additional)* Cancels the logged-in participant's own enrolment. | Participant | None | 204 No Content; 403 Forbidden – not the owning participant; 404 Not Found |
 | GET | /api/results/me | Lists the logged-in participant's own results. | Participant | None | 200 OK – array of results |
 
-## Shared / Public Endpoints
+## Shared / Public Endpoints DOCUMENTATION CHOICE ONLY
 
 | HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
 |---|---|---|---|---|---|
