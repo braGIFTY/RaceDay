@@ -1,4 +1,5 @@
 # RaceDay
+![Validate Repository Structure](https://github.com/braGIFTY/RaceDay/actions/workflows/validate-docs.yml/badge.svg)
 
 RaceDay is a full-stack event management platform for South Africa's road running, walking, and cycling community. Event Organisers can create and manage events, define categories, and capture participant results. Participants can browse upcoming events, enter them by selecting a category, and track their own enrolment and results history.
 
