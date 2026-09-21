@@ -3,7 +3,7 @@
 Thumbs.db
 .vscode/
 .idea/
-
+.vs/
 # .NET (ready for Part 2)
 bin/
 obj/
