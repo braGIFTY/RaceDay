@@ -86,8 +86,9 @@ namespace RaceDay.Api.Data
                       .HasForeignKey(en => en.ParticipantId);
 
                 entity.HasOne(en => en.Event)
-                      .WithMany(e => e.Enrolments)
-                      .HasForeignKey(en => en.EventId);
+      .WithMany(e => e.Enrolments)
+      .HasForeignKey(en => en.EventId)
+      .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(en => en.Category)
                       .WithMany(c => c.Enrolments)
