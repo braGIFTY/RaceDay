@@ -1,7 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
 
 // Add services to the container.
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
@@ -22,6 +32,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseSession();
 
 app.UseAuthorization();
 
