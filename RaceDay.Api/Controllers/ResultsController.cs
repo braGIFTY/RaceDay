@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
 using RaceDay.Api.DTOs;
@@ -17,8 +18,23 @@ namespace RaceDay.Api.Controllers
             _context = context;
         }
 
+        /// <summary>Captures a finish time and position for a participant's enrolment, entered by the owning Organiser.</summary>
+        /// <param name="id">The enrolment's id.</param>
+        /// <param name="request">Finish time and finishing position.</param>
+        /// <response code="201">Result recorded successfully.</response>
+        /// <response code="400">The request body failed validation.</response>
+        /// <response code="401">No active session.</response>
+        /// <response code="403">Logged in, but not the Organiser who owns the event this enrolment belongs to.</response>
+        /// <response code="404">No enrolment exists with this id.</response>
+        /// <response code="409">A result has already been captured for this enrolment.</response>
         [HttpPost("api/enrolments/{id}/results")]
         [RequireRole("Organiser")]
+        [ProducesResponseType(typeof(ResultResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Create(int id, CreateResultRequest request)
         {
             var organiserId = HttpContext.Session.GetInt32("UserId")!.Value;
@@ -53,8 +69,21 @@ namespace RaceDay.Api.Controllers
                 enrolment.EventId, enrolment.Event.Name, result.FinishTime, result.Position, result.CreatedAt));
         }
 
+        /// <summary>(Additional) Updates a previously captured result.</summary>
+        /// <param name="id">The result's id.</param>
+        /// <param name="request">Updated finish time and finishing position.</param>
+        /// <response code="200">Result updated successfully.</response>
+        /// <response code="400">The request body failed validation.</response>
+        /// <response code="401">No active session.</response>
+        /// <response code="403">Logged in, but not the Organiser who owns the event this result belongs to.</response>
+        /// <response code="404">No result exists with this id.</response>
         [HttpPut("api/results/{id}")]
         [RequireRole("Organiser")]
+        [ProducesResponseType(typeof(ResultResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(int id, UpdateResultRequest request)
         {
             var organiserId = HttpContext.Session.GetInt32("UserId")!.Value;
@@ -81,8 +110,15 @@ namespace RaceDay.Api.Controllers
                 result.Enrolment.EventId, result.Enrolment.Event.Name, result.FinishTime, result.Position, result.CreatedAt));
         }
 
+        /// <summary>Lists the logged-in Participant's own results.</summary>
+        /// <response code="200">Array of this participant's results.</response>
+        /// <response code="401">No active session.</response>
+        /// <response code="403">Logged in, but not as a Participant.</response>
         [HttpGet("api/results/me")]
         [RequireRole("Participant")]
+        [ProducesResponseType(typeof(List<ResultResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetMine()
         {
             var participantId = HttpContext.Session.GetInt32("UserId")!.Value;
@@ -101,8 +137,18 @@ namespace RaceDay.Api.Controllers
             return Ok(results);
         }
 
+        /// <summary>(Additional) Lists all results for an event owned by the logged-in Organiser.</summary>
+        /// <param name="eventId">The event's id.</param>
+        /// <response code="200">Array of results for this event.</response>
+        /// <response code="401">No active session.</response>
+        /// <response code="403">Logged in, but not the Organiser who owns this event.</response>
+        /// <response code="404">No event exists with this id.</response>
         [HttpGet("api/events/{eventId}/results")]
         [RequireRole("Organiser")]
+        [ProducesResponseType(typeof(List<ResultResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetByEvent(int eventId)
         {
             var organiserId = HttpContext.Session.GetInt32("UserId")!.Value;
