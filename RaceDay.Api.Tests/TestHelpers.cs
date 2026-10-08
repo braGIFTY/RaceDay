@@ -48,5 +48,12 @@ namespace RaceDay.Api.Tests
             response.EnsureSuccessStatusCode();
             return (await response.Content.ReadFromJsonAsync<CategoryResponse>())!;
         }
+        public static async Task<EnrolmentResponse> CreateEnrolmentAsync(HttpClient participantClient, int eventId, int categoryId)
+        {
+            var response = await participantClient.PostAsJsonAsync("/api/enrolments", new CreateEnrolmentRequest(eventId, categoryId));
+            response.EnsureSuccessStatusCode();
+            return (await response.Content.ReadFromJsonAsync<EnrolmentResponse>())!;
+        }
+
     }
 }
