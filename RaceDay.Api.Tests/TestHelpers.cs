@@ -55,5 +55,12 @@ namespace RaceDay.Api.Tests
             return (await response.Content.ReadFromJsonAsync<EnrolmentResponse>())!;
         }
 
+        public static async Task<ResultResponse> CreateResultAsync(HttpClient organiserClient, int enrolmentId, TimeSpan finishTime, int position)
+        {
+            var response = await organiserClient.PostAsJsonAsync(
+                $"/api/enrolments/{enrolmentId}/results", new CreateResultRequest(finishTime, position));
+            response.EnsureSuccessStatusCode();
+            return (await response.Content.ReadFromJsonAsync<ResultResponse>())!;
+        }
     }
 }
