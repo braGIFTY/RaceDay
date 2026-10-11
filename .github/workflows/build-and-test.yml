@@ -1,0 +1,35 @@
+name: Build and Test API
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      # Pulls your repository onto the fresh GitHub machine
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # The machine starts with no .NET 8 SDK guaranteed, so install it
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Restoring the test project also restores RaceDay.Api, since it references it
+      - name: Restore dependencies
+        run: dotnet restore RaceDay.Api.Tests/RaceDay.Api.Tests.csproj
+
+      - name: Build API
+        run: dotnet build RaceDay.Api/RaceDay.Api.csproj --configuration Release --no-restore
+
+      - name: Build tests
+        run: dotnet build RaceDay.Api.Tests/RaceDay.Api.Tests.csproj --configuration Release --no-restore
+
+      # Uses the in-memory database, so no SQL Server is needed on this machine
+      - name: Run unit tests
+        run: dotnet test RaceDay.Api.Tests/RaceDay.Api.Tests.csproj --configuration Release --no-build --verbosity normal
