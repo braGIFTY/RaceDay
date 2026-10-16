@@ -191,4 +191,4 @@ To look at the Part 1 database on its own, open `docs/raceday-schema.sql` in SQL
 ## Video Walkthroughs
 
 - [Part 1 video walkthrough](https://youtu.be/US8X2dPBVJo)
-- <!-- TODO: add the unlisted YouTube link once recorded --> [Part 2 video walkthrough](PASTE_PART_2_YOUTUBE_LINK_HERE)
+- [Part 2 video walkthrough](https://youtu.be/eBEc5hjMr5M)
