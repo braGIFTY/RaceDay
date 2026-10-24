@@ -92,5 +92,30 @@ namespace RaceDay.Api.Tests.Controllers
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
+
+        [Fact]
+        public async Task Logout_AfterLogin_EndsTheSession()
+        {
+            var email = UniqueEmail("logout");
+            await _client.PostAsJsonAsync("/api/auth/register/organiser", new RegisterRequest("Logout Test", email, "Password123"));
+            await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest(email, "Password123"));
+
+            var beforeLogout = await _client.GetAsync("/api/users/me");
+            Assert.Equal(HttpStatusCode.OK, beforeLogout.StatusCode);
+
+            var logoutResponse = await _client.PostAsync("/api/auth/logout", null);
+            Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
+
+            var afterLogout = await _client.GetAsync("/api/users/me");
+            Assert.Equal(HttpStatusCode.Unauthorized, afterLogout.StatusCode);
+        }
+
+        [Fact]
+        public async Task Logout_WithoutLogin_StillReturnsNoContent()
+        {
+            var response = await _client.PostAsync("/api/auth/logout", null);
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
     }
 }
