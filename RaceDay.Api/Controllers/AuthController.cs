@@ -112,6 +112,15 @@ namespace RaceDay.Api.Controllers
             return Unauthorized(new { message = "Invalid email or password." });
         }
 
+        /// <summary>(Part 3 addition) Ends the current session. Safe to call when not logged in.</summary>
+        /// <response code="204">The session has been cleared.</response>
+        [HttpPost("logout")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            return NoContent();
+        }
         private async Task<bool> EmailExistsAsync(string email)
         {
             var inOrganisers = await _context.Organisers.AnyAsync(o => o.Email == email);
