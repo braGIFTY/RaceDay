@@ -48,6 +48,7 @@ namespace RaceDay.Api.Tests.Controllers
             var body = await response.Content.ReadFromJsonAsync<EnrolmentResponse>();
             Assert.Equal(user.Id, body!.ParticipantId);
             Assert.Equal(ev.Id, body.EventId);
+            Assert.Equal(ev.EventDate.Date, body.EventDate.Date);
             Assert.Equal(category.Id, body.CategoryId);
             Assert.Equal("Confirmed", body.Status);
         }
@@ -94,6 +95,26 @@ namespace RaceDay.Api.Tests.Controllers
         }
 
         [Fact]
+        public async Task Create_AfterCancelling_ReactivatesTheSameEnrolmentWithTheNewCategory()
+        {
+            var (organiser, _) = await TestHelpers.CreateLoggedInOrganiserAsync(_factory);
+            var ev = await TestHelpers.CreateEventAsync(organiser);
+            var categoryA = await TestHelpers.CreateCategoryAsync(organiser, ev.Id, "10km");
+            var categoryB = await TestHelpers.CreateCategoryAsync(organiser, ev.Id, "21km");
+            var (participant, _) = await TestHelpers.CreateLoggedInParticipantAsync(_factory);
+            var original = await TestHelpers.CreateEnrolmentAsync(participant, ev.Id, categoryA.Id);
+            await participant.DeleteAsync($"/api/enrolments/{original.Id}");
+
+            var response = await participant.PostAsJsonAsync("/api/enrolments", new CreateEnrolmentRequest(ev.Id, categoryB.Id));
+
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            var body = await response.Content.ReadFromJsonAsync<EnrolmentResponse>();
+            Assert.Equal(original.Id, body!.Id);
+            Assert.Equal(categoryB.Id, body.CategoryId);
+            Assert.Equal("Confirmed", body.Status);
+        }
+
+        [Fact]
         public async Task GetMine_ReturnsOnlyTheCurrentParticipantsEnrolments()
         {
             var (organiser, _) = await TestHelpers.CreateLoggedInOrganiserAsync(_factory);
@@ -133,6 +154,23 @@ namespace RaceDay.Api.Tests.Controllers
         }
 
         [Fact]
+        public async Task GetByEvent_ShowsCancelledEnrolmentsWithTheirStatus()
+        {
+            var (organiser, _) = await TestHelpers.CreateLoggedInOrganiserAsync(_factory);
+            var ev = await TestHelpers.CreateEventAsync(organiser);
+            var category = await TestHelpers.CreateCategoryAsync(organiser, ev.Id);
+            var (participant, _) = await TestHelpers.CreateLoggedInParticipantAsync(_factory);
+            var enrolment = await TestHelpers.CreateEnrolmentAsync(participant, ev.Id, category.Id);
+            await participant.DeleteAsync($"/api/enrolments/{enrolment.Id}");
+
+            var response = await organiser.GetAsync($"/api/events/{ev.Id}/enrolments");
+
+            var list = await response.Content.ReadFromJsonAsync<List<EnrolmentResponse>>();
+            var shown = Assert.Single(list!);
+            Assert.Equal("Cancelled", shown.Status);
+        }
+
+        [Fact]
         public async Task GetByEvent_AsDifferentOrganiser_ReturnsForbidden()
         {
             var (owner, _) = await TestHelpers.CreateLoggedInOrganiserAsync(_factory);
@@ -145,7 +183,7 @@ namespace RaceDay.Api.Tests.Controllers
         }
 
         [Fact]
-        public async Task Cancel_AsOwningParticipant_ReturnsNoContentAndEnrolmentIsGone()
+        public async Task Cancel_AsOwningParticipant_ReturnsNoContentAndMarksTheEnrolmentCancelled()
         {
             var (organiser, _) = await TestHelpers.CreateLoggedInOrganiserAsync(_factory);
             var ev = await TestHelpers.CreateEventAsync(organiser);
@@ -158,7 +196,8 @@ namespace RaceDay.Api.Tests.Controllers
 
             var listResponse = await participant.GetAsync("/api/enrolments/me");
             var list = await listResponse.Content.ReadFromJsonAsync<List<EnrolmentResponse>>();
-            Assert.Empty(list!);
+            var remaining = Assert.Single(list!);
+            Assert.Equal("Cancelled", remaining.Status);
         }
 
         [Fact]
@@ -174,6 +213,21 @@ namespace RaceDay.Api.Tests.Controllers
             var response = await otherParticipant.DeleteAsync($"/api/enrolments/{enrolment.Id}");
 
             Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Cancel_WhenAResultHasBeenRecorded_ReturnsConflict()
+        {
+            var (organiser, _) = await TestHelpers.CreateLoggedInOrganiserAsync(_factory);
+            var ev = await TestHelpers.CreateEventAsync(organiser);
+            var category = await TestHelpers.CreateCategoryAsync(organiser, ev.Id);
+            var (participant, _) = await TestHelpers.CreateLoggedInParticipantAsync(_factory);
+            var enrolment = await TestHelpers.CreateEnrolmentAsync(participant, ev.Id, category.Id);
+            await TestHelpers.CreateResultAsync(organiser, enrolment.Id, new TimeSpan(1, 38, 47), 1);
+
+            var response = await participant.DeleteAsync($"/api/enrolments/{enrolment.Id}");
+
+            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         }
     }
 }

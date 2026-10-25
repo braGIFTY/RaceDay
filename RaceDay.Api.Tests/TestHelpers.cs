@@ -33,9 +33,10 @@ namespace RaceDay.Api.Tests
             return (client, user);
         }
 
-        public static async Task<EventResponse> CreateEventAsync(HttpClient organiserClient, string name = "Test Event")
+        public static async Task<EventResponse> CreateEventAsync(HttpClient organiserClient, string name = "Test Event", DateTime? eventDate = null)
         {
-            var request = new CreateEventRequest(name, "A test event", new DateTime(2026, 12, 1), "Test City", 10m, "Run");
+            // Default to a past date, so tests can record results straight away
+            var request = new CreateEventRequest(name, "A test event", eventDate ?? DateTime.Today.AddDays(-7), "Test City", 10m, "Run");
             var response = await organiserClient.PostAsJsonAsync("/api/events", request);
             response.EnsureSuccessStatusCode();
             return (await response.Content.ReadFromJsonAsync<EventResponse>())!;
