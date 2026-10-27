@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
 using Microsoft.AspNetCore.Identity;
+using RaceDay.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
+builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
 
 // Add services to the container.
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
