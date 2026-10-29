@@ -29,6 +29,7 @@ namespace RaceDay.Api.Data
                 entity.HasIndex(o => o.Email).IsUnique();
                 entity.Property(o => o.PasswordHash).HasMaxLength(255).IsRequired();
                 entity.Property(o => o.Phone).HasMaxLength(20);
+                entity.Property(o => o.ProfileImageUrl).HasMaxLength(500);
                 entity.Property(o => o.CreatedAt).HasDefaultValueSql("SYSDATETIME()");
             });
 
@@ -40,6 +41,7 @@ namespace RaceDay.Api.Data
                 entity.HasIndex(p => p.Email).IsUnique();
                 entity.Property(p => p.PasswordHash).HasMaxLength(255).IsRequired();
                 entity.Property(p => p.Phone).HasMaxLength(20);
+                entity.Property(p => p.ProfileImageUrl).HasMaxLength(500);
                 entity.Property(p => p.CreatedAt).HasDefaultValueSql("SYSDATETIME()");
             });
 
@@ -51,6 +53,7 @@ namespace RaceDay.Api.Data
                 entity.Property(e => e.Location).HasMaxLength(150).IsRequired();
                 entity.Property(e => e.DistanceKm).HasPrecision(6, 2);
                 entity.Property(e => e.EventType).HasMaxLength(10).IsRequired();
+                entity.Property(e => e.BannerImageUrl).HasMaxLength(500);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSDATETIME()");
 
                 entity.HasOne(e => e.Organiser)

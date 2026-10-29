@@ -9,6 +9,8 @@
         public string? Phone { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        public string? ProfileImageUrl { get; set; }
+
         public ICollection<Enrolment> Enrolments { get; set; } = new List<Enrolment>();
     }
 }
