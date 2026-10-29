@@ -20,10 +20,11 @@ namespace RaceDay.Api.DTOs
         [Required, RegularExpression("^(Run|Walk|Cycle)$", ErrorMessage = "EventType must be Run, Walk, or Cycle.")] string EventType
     );
  
+    // Part 3: BannerImageUrl is the public Azure Blob Storage link, or null if no banner was uploaded
     public record EventResponse(
         int Id, int OrganiserId, string Name, string? Description,
         DateTime EventDate, string Location, decimal DistanceKm,
-        string EventType, DateTime CreatedAt
+        string EventType, string? BannerImageUrl, DateTime CreatedAt
     );
  
     // Part 3: one row of the Organiser's own events, with how many active
@@ -31,6 +32,6 @@ namespace RaceDay.Api.DTOs
     public record OrganiserEventSummary(
         int Id, string Name, string? Description, DateTime EventDate,
         string Location, decimal DistanceKm, string EventType,
-        DateTime CreatedAt, int EnrolmentCount
+        string? BannerImageUrl, DateTime CreatedAt, int EnrolmentCount
     );
 }

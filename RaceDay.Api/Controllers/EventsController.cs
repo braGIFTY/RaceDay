@@ -5,6 +5,7 @@ using RaceDay.Api.Data;
 using RaceDay.Api.DTOs;
 using RaceDay.Api.Filters;
 using RaceDay.Api.Models;
+using RaceDay.Api.Services;
  
 namespace RaceDay.Api.Controllers
 {
@@ -15,10 +16,12 @@ namespace RaceDay.Api.Controllers
         private static readonly string[] EventTypes = { "Run", "Walk", "Cycle" };
  
         private readonly RaceDayDbContext _context;
+        private readonly ImageUploader _imageUploader;
  
-        public EventsController(RaceDayDbContext context)
+        public EventsController(RaceDayDbContext context, ImageUploader imageUploader)
         {
             _context = context;
+            _imageUploader = imageUploader;
         }
  
         /// <summary>Lists events, earliest first. Every filter is optional and filters can be combined.</summary>
@@ -79,7 +82,7 @@ namespace RaceDay.Api.Controllers
                 .OrderBy(e => e.EventDate)
                 .ThenBy(e => e.Id)
                 .Select(e => new EventResponse(e.Id, e.OrganiserId, e.Name, e.Description,
-                    e.EventDate, e.Location, e.DistanceKm, e.EventType, e.CreatedAt))
+                    e.EventDate, e.Location, e.DistanceKm, e.EventType, e.BannerImageUrl, e.CreatedAt))
                 .ToListAsync();
  
             return Ok(events);
@@ -104,7 +107,7 @@ namespace RaceDay.Api.Controllers
                 .ThenBy(e => e.Id)
                 .Select(e => new OrganiserEventSummary(
                     e.Id, e.Name, e.Description, e.EventDate, e.Location,
-                    e.DistanceKm, e.EventType, e.CreatedAt,
+                    e.DistanceKm, e.EventType, e.BannerImageUrl, e.CreatedAt,
                     e.Enrolments.Count(en => en.Status != "Cancelled")))
                 .ToListAsync();
  
@@ -124,8 +127,7 @@ namespace RaceDay.Api.Controllers
             if (ev == null)
                 return NotFound(new { message = "Event not found." });
  
-            return Ok(new EventResponse(ev.Id, ev.OrganiserId, ev.Name, ev.Description,
-                ev.EventDate, ev.Location, ev.DistanceKm, ev.EventType, ev.CreatedAt));
+            return Ok(ToResponse(ev));
         }
  
         /// <summary>Creates a new event owned by the logged-in Organiser.</summary>
@@ -158,11 +160,10 @@ namespace RaceDay.Api.Controllers
             _context.Events.Add(ev);
             await _context.SaveChangesAsync();
  
-            return StatusCode(201, new EventResponse(ev.Id, ev.OrganiserId, ev.Name, ev.Description,
-                ev.EventDate, ev.Location, ev.DistanceKm, ev.EventType, ev.CreatedAt));
+            return StatusCode(201, ToResponse(ev));
         }
  
-        /// <summary>Updates an event owned by the logged-in Organiser.</summary>
+        /// <summary>Updates an event owned by the logged-in Organiser. The banner image is changed separately, through the banner endpoint.</summary>
         /// <param name="id">The event's id.</param>
         /// <param name="request">Updated name, description, date, location, distance, and event type.</param>
         /// <response code="200">Event updated successfully.</response>
@@ -196,8 +197,50 @@ namespace RaceDay.Api.Controllers
             ev.EventType = request.EventType;
             await _context.SaveChangesAsync();
  
-            return Ok(new EventResponse(ev.Id, ev.OrganiserId, ev.Name, ev.Description,
-                ev.EventDate, ev.Location, ev.DistanceKm, ev.EventType, ev.CreatedAt));
+            return Ok(ToResponse(ev));
+        }
+ 
+        /// <summary>(Part 3 addition) Uploads or replaces the banner image of an event owned by the logged-in Organiser. The image is stored in Azure Blob Storage and its public URL is saved on the event.</summary>
+        /// <param name="id">The event's id.</param>
+        /// <param name="file">The image: JPEG, PNG or WebP, up to 5 MB.</param>
+        /// <response code="200">Banner saved. Returns the updated event, including the image URL.</response>
+        /// <response code="400">No file, a file over 5 MB, or a file that is not a JPEG, PNG or WebP image.</response>
+        /// <response code="401">No active session.</response>
+        /// <response code="403">Logged in, but not the Organiser who owns this event.</response>
+        /// <response code="404">No event exists with this id.</response>
+        /// <response code="503">Image storage is not set up, or could not be reached.</response>
+        [HttpPost("{id}/banner")]
+        [RequireRole("Organiser")]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(EventResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+        public async Task<IActionResult> UploadBanner(int id, IFormFile? file)
+        {
+            var organiserId = HttpContext.Session.GetInt32("UserId")!.Value;
+ 
+            var ev = await _context.Events.FindAsync(id);
+            if (ev == null)
+                return NotFound(new { message = "Event not found." });
+ 
+            if (ev.OrganiserId != organiserId)
+                return StatusCode(403, new { message = "You do not own this event." });
+ 
+            var upload = await _imageUploader.UploadAsync(file, "events");
+            if (!upload.Succeeded)
+                return StatusCode(upload.StatusCode, new { message = upload.Error });
+ 
+            var previousBanner = ev.BannerImageUrl;
+            ev.BannerImageUrl = upload.Url;
+            await _context.SaveChangesAsync();
+ 
+            // The old banner is no longer used by anything, so remove it from storage
+            await _imageUploader.DeleteAsync(previousBanner);
+ 
+            return Ok(ToResponse(ev));
         }
  
         /// <summary>Deletes an event owned by the logged-in Organiser.</summary>
@@ -223,11 +266,19 @@ namespace RaceDay.Api.Controllers
             if (ev.OrganiserId != organiserId)
                 return StatusCode(403, new { message = "You do not own this event." });
  
+            var banner = ev.BannerImageUrl;
+ 
             _context.Events.Remove(ev);
             await _context.SaveChangesAsync();
  
+            // The event is gone, so its banner image would only be left behind in storage
+            await _imageUploader.DeleteAsync(banner);
+ 
             return NoContent();
         }
+ 
+        private static EventResponse ToResponse(Event ev) =>
+            new(ev.Id, ev.OrganiserId, ev.Name, ev.Description, ev.EventDate, ev.Location,
+                ev.DistanceKm, ev.EventType, ev.BannerImageUrl, ev.CreatedAt);
     }
 }
- 

@@ -14,6 +14,7 @@ builder.Services.AddSession(options =>
 });
 builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
 builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
+builder.Services.AddScoped<ImageUploader>();
 
 // Add services to the container.
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
