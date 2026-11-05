@@ -1,4 +1,4 @@
-name: Build and Test API
+name: Build and Test
 
 on:
   push:
@@ -14,22 +14,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # The machine starts with no .NET 8 SDK guaranteed, so install it
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      # Restoring the test project also restores RaceDay.Api, since it references it
+      # Restoring the test project also restores RaceDay.Api, since it references it.
+      # The MVC project is separate, so it is restored on its own.
       - name: Restore dependencies
-        run: dotnet restore RaceDay.Api.Tests/RaceDay.Api.Tests.csproj
+        run: |
+          dotnet restore RaceDay.Api.Tests/RaceDay.Api.Tests.csproj
+          dotnet restore RaceDay.Mvc/RaceDay.Mvc.csproj
 
       - name: Build API
         run: dotnet build RaceDay.Api/RaceDay.Api.csproj --configuration Release --no-restore
 
+      - name: Build MVC
+        run: dotnet build RaceDay.Mvc/RaceDay.Mvc.csproj --configuration Release --no-restore
+
       - name: Build tests
         run: dotnet build RaceDay.Api.Tests/RaceDay.Api.Tests.csproj --configuration Release --no-restore
 
-      # Uses the in-memory database, so no SQL Server is needed on this machine
+      # Uses the in-memory database and a fake blob store, so no SQL Server or Azure is needed here
       - name: Run unit tests
         run: dotnet test RaceDay.Api.Tests/RaceDay.Api.Tests.csproj --configuration Release --no-build --verbosity normal
