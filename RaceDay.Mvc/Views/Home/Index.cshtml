@@ -1,8 +1,25 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<EventDto>
+@{
+    ViewData["Title"] = "RaceDay";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1>RaceDay</h1>
+<p>Connection check: the events below are read from the API.</p>
+
+@if (ViewBag.ApiError != null)
+{
+    <div class="alert alert-warning">@ViewBag.ApiError</div>
+}
+else if (!Model.Any())
+{
+    <p>The API replied, but there are no upcoming events yet.</p>
+}
+else
+{
+    <ul>
+        @foreach (var ev in Model)
+        {
+            <li>@ev.Name, @ev.Location, @ev.EventDate.ToString("d MMM yyyy")</li>
+        }
+    </ul>
+}
