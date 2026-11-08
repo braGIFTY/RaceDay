@@ -1,25 +1,119 @@
 ﻿@model List<EventDto>
+@inject RaceDay.Mvc.Services.UserSession CurrentUser
 @{
-    ViewData["Title"] = "RaceDay";
+    ViewData["Title"] = "Home";
+    ViewData["HideHeader"] = true;
+    ViewData["FullWidth"] = true;
 }
 
-<h1>RaceDay</h1>
-<p>Connection check: the events below are read from the API.</p>
+<section class="rd-hero">
+    <div class="container">
+        <span class="rd-eyebrow">Running &middot; Walking &middot; Cycling</span>
+        <h1>Race day <span class="rd-mark">starts</span> here.</h1>
+        <p class="rd-hero-lead">
+            Find your next road race, enter in a few clicks, and keep every finish time in one place.
+            Organisers run the whole event from a single dashboard.
+        </p>
+        <div class="rd-hero-actions">
+            @if (CurrentUser.IsAuthenticated)
+            {
+                if (CurrentUser.IsOrganiser)
+                {
+                    <a class="btn btn-primary btn-lg" href="~/Dashboard">Go to my dashboard</a>
+                    <a class="btn btn-light btn-lg" href="~/ManageEvents">Manage events</a>
+                }
+                else
+                {
+                    <a class="btn btn-primary btn-lg" href="~/Events">Find an event</a>
+                    <a class="btn btn-light btn-lg" href="~/MyEvents">My events</a>
+                }
+            }
+            else
+            {
+                <a class="btn btn-primary btn-lg" href="~/Account/Register">Join RaceDay</a>
+                <a class="btn btn-light btn-lg" href="~/Account/Login">Log in</a>
+            }
+        </div>
+    </div>
+</section>
 
-@if (ViewBag.ApiError != null)
-{
-    <div class="alert alert-warning">@ViewBag.ApiError</div>
-}
-else if (!Model.Any())
-{
-    <p>The API replied, but there are no upcoming events yet.</p>
-}
-else
-{
-    <ul>
-        @foreach (var ev in Model)
+<section class="rd-section">
+    <div class="container">
+        <div class="rd-section-head">
+            <h2>How it works</h2>
+            <span class="rd-stripes" aria-hidden="true"><i></i><i></i><i></i></span>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="rd-card rd-step">
+                    <div class="rd-step-number">01</div>
+                    <h3>Pick your race</h3>
+                    <p>Browse upcoming runs, walks and rides, and filter by type, place or distance.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="rd-card rd-step">
+                    <div class="rd-step-number">02</div>
+                    <h3>Enter in seconds</h3>
+                    <p>Choose your category and you're in. Your entry is recorded straight away.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="rd-card rd-step">
+                    <div class="rd-step-number">03</div>
+                    <h3>Own the finish</h3>
+                    <p>Organisers capture the times, and your results and positions build your race history.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="rd-section rd-section-tint">
+    <div class="container">
+        <div class="rd-section-head">
+            <h2>Coming up</h2>
+            <span class="rd-stripes" aria-hidden="true"><i></i><i></i><i></i></span>
+        </div>
+
+        @if (ViewBag.ApiError != null)
         {
-            <li>@ev.Name, @ev.Location, @ev.EventDate.ToString("d MMM yyyy")</li>
+            <div class="alert alert-warning" role="alert">@ViewBag.ApiError</div>
         }
-    </ul>
+        else if (!Model.Any())
+        {
+            <div class="rd-empty">
+                <div class="rd-empty-icon" aria-hidden="true">🏁</div>
+                <h3>No races on the calendar yet</h3>
+                <p>New events are added by organisers all the time. Check back soon.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var ev in Model.Take(6))
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <partial name="_EventCard" model="ev" />
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@if (!CurrentUser.IsAuthenticated)
+{
+    <section class="rd-section">
+        <div class="container">
+            <div class="rd-cta">
+                <h2>Ready to line up?</h2>
+                <p>Create a free account to enter events and track your results, or sign up as an organiser to run your own.</p>
+                <div class="rd-hero-actions">
+                    <a class="btn btn-primary btn-lg" href="~/Account/Register">Join as a participant</a>
+                    <a class="btn btn-light btn-lg" href="~/Account/Register?role=Organiser">Organise an event</a>
+                </div>
+            </div>
+        </div>
+    </section>
 }

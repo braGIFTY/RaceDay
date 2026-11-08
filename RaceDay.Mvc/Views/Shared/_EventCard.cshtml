@@ -1,0 +1,37 @@
+﻿@model EventDto
+@{
+    var emoji = Model.EventType switch
+    {
+        "Run" => "🏃",
+        "Walk" => "🚶",
+        "Cycle" => "🚴",
+        _ => "🏁"
+    };
+}
+
+<article class="rd-card rd-card-hover rd-event-card h-100">
+    <div class="rd-event-media">
+        @if (!string.IsNullOrEmpty(Model.BannerImageUrl))
+        {
+            <img src="@Model.BannerImageUrl" alt="" loading="lazy" />
+        }
+        else
+        {
+            <span class="rd-event-emoji" aria-hidden="true">@emoji</span>
+        }
+        <span class="rd-badge-type">@Model.EventType</span>
+    </div>
+
+    <div class="rd-event-body">
+        <div class="rd-event-date">@Model.EventDate.ToString("dd MMM yyyy").ToUpper()</div>
+        <h3 class="rd-event-title">@Model.Name</h3>
+        <p class="rd-event-meta">📍 @Model.Location &middot; @Model.DistanceKm.ToString("0.##") km</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <p class="rd-event-desc">@Model.Description</p>
+        }
+
+        <a class="btn btn-secondary btn-sm stretched-link" href="@Url.Content("~/Events/Details/" + Model.Id)">View event</a>
+    </div>
+</article>
