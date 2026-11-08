@@ -1,0 +1,13 @@
+# Starts the RaceDay website in a container with one command:
+#   docker compose up --build
+# The API runs on your machine (see the README); the container reaches it through host.docker.internal.
+services:
+  raceday-mvc:
+    build: ./RaceDay.Mvc
+    image: raceday-mvc
+    ports:
+      - "8080:8080"
+    environment:
+      - Api__BaseUrl=http://host.docker.internal:5180/
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,10 @@
+@* Shows form-level problems (for example "Invalid email or password.") as a friendly alert *@
+@if (ViewData.ModelState.TryGetValue(string.Empty, out var entry) && entry.Errors.Count > 0)
+{
+    <div class="alert alert-danger" role="alert">
+        @foreach (var problem in entry.Errors)
+        {
+            <div>@problem.ErrorMessage</div>
+        }
+    </div>
+}
