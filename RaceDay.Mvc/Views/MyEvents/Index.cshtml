@@ -1,0 +1,51 @@
+@model List<EnrolmentDto>
+@{
+    ViewData["Title"] = "My events";
+    ViewData["Subtitle"] = "Every race you've entered, and where each entry stands.";
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-warning" role="alert">@ViewBag.Error</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="rd-empty rd-card">
+        <div class="rd-empty-icon" aria-hidden="true">👟</div>
+        <h3>You haven't entered anything yet</h3>
+        <p>Find a race you fancy and enter it in a few clicks.</p>
+        <a class="btn btn-primary" href="~/Events">Find an event</a>
+    </div>
+}
+else
+{
+    <div class="rd-card">
+        <div class="table-responsive">
+            <table class="table rd-table align-middle">
+                <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var e in Model)
+                    {
+                        <tr>
+                            <td><strong>@e.EventName</strong></td>
+                            <td>@e.EventDate.ToString("dd MMM yyyy")</td>
+                            <td>@e.CategoryName</td>
+                            <td><span class="rd-status rd-status-@e.Status.ToLowerInvariant()">@e.Status</span></td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-secondary btn-sm" href="@Url.Content("~/Events/Details/" + e.EventId)">View event</a>
+                                @if (e.Status == "Confirmed")
+                                {
+                                    <form asp-action="Cancel" asp-route-id="@e.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('Cancel your entry in this event?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel entry</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -19,7 +19,7 @@ namespace RaceDay.Mvc.Controllers
         public IActionResult Login(string? returnUrl = null)
         {
             if (_session.IsAuthenticated)
-                return RedirectToAction("Index", "Home");
+                return RedirectToLanding(_session.Role);
 
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
@@ -44,14 +44,14 @@ namespace RaceDay.Mvc.Controllers
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return LocalRedirect(model.ReturnUrl);
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToLanding(result.Data.Role);
         }
 
         [HttpGet]
         public IActionResult Register(string? role = null)
         {
             if (_session.IsAuthenticated)
-                return RedirectToAction("Index", "Home");
+                return RedirectToLanding(_session.Role);
 
             return View(new RegisterViewModel { Role = role == "Organiser" ? "Organiser" : "Participant" });
         }
@@ -89,7 +89,7 @@ namespace RaceDay.Mvc.Controllers
             }
 
             TempData["Success"] = $"Welcome to RaceDay, {FirstName(model.FullName)}!";
-            return RedirectToAction("Index", "Home");
+            return RedirectToLanding(model.Role);
         }
 
         [HttpPost]
@@ -106,6 +106,12 @@ namespace RaceDay.Mvc.Controllers
             Response.StatusCode = StatusCodes.Status403Forbidden;
             return View();
         }
+
+        // Each role lands on its own home page after logging in
+        private IActionResult RedirectToLanding(string? role) =>
+            role == "Organiser"
+                ? RedirectToAction("Index", "Dashboard")
+                : RedirectToAction("Index", "Events");
 
         private static string FirstName(string fullName) =>
             fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "there";

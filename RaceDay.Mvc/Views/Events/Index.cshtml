@@ -1,0 +1,61 @@
+@model EventsIndexViewModel
+@{
+    ViewData["Title"] = "Find an event";
+    ViewData["Subtitle"] = "Upcoming runs, walks and rides. Filter by type, place or distance.";
+}
+
+<form method="get" asp-action="Index" class="rd-card p-3 mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="search" class="form-label">Search</label>
+            <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Event name or place" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="type" class="form-label">Type</label>
+            <select id="type" name="type" class="form-select">
+                <option value="">All</option>
+                <option value="Run" selected="@(Model.Type == "Run")">Run</option>
+                <option value="Walk" selected="@(Model.Type == "Walk")">Walk</option>
+                <option value="Cycle" selected="@(Model.Type == "Cycle")">Cycle</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="minDistance" class="form-label">Min km</label>
+            <input id="minDistance" name="minDistance" type="number" step="0.1" min="0" value="@Model.MinDistance" class="form-control" />
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="maxDistance" class="form-label">Max km</label>
+            <input id="maxDistance" name="maxDistance" type="number" step="0.1" min="0" value="@Model.MaxDistance" class="form-control" />
+        </div>
+        <div class="col-6 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a class="btn btn-outline-secondary" href="~/Events">Clear</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.Error != null)
+{
+    <div class="alert alert-warning" role="alert">@Model.Error</div>
+}
+else if (!Model.Events.Any())
+{
+    <div class="rd-empty rd-card">
+        <div class="rd-empty-icon" aria-hidden="true">🔍</div>
+        <h3>No events match</h3>
+        <p>Try a different search or clear the filters to see everything coming up.</p>
+        <a class="btn btn-primary" href="~/Events">Clear filters</a>
+    </div>
+}
+else
+{
+    <p class="rd-muted">@Model.Events.Count event@(Model.Events.Count == 1 ? "" : "s") found</p>
+    <div class="row g-4">
+        @foreach (var ev in Model.Events)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <partial name="_EventCard" model="ev" />
+            </div>
+        }
+    </div>
+}

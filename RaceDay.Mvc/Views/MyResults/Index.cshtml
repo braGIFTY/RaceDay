@@ -1,0 +1,43 @@
+@model List<ResultDto>
+@{
+    ViewData["Title"] = "My results";
+    ViewData["Subtitle"] = "Your race history: times, categories and where you finished.";
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-warning" role="alert">@ViewBag.Error</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="rd-empty rd-card">
+        <div class="rd-empty-icon" aria-hidden="true">🏅</div>
+        <h3>No results yet</h3>
+        <p>Results appear here once an organiser records them after the race.</p>
+        <a class="btn btn-primary" href="~/MyEvents">See my events</a>
+    </div>
+}
+else
+{
+    <p class="rd-muted">@Model.Count race@(Model.Count == 1 ? "" : "s") finished</p>
+    <div class="rd-card">
+        <div class="table-responsive">
+            <table class="table rd-table align-middle">
+                <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Finish time</th><th>Position</th></tr></thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td><strong>@r.EventName</strong></td>
+                            <td>@r.EventDate.ToString("dd MMM yyyy")</td>
+                            <td>@r.CategoryName</td>
+                            <td>@r.FinishTime.ToString("c")</td>
+                            <td><strong>@RaceDay.Mvc.Services.Ordinal.Of(r.Position)</strong> <span class="rd-muted">of @r.TotalFinishers</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
