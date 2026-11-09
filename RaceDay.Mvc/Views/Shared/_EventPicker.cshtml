@@ -1,0 +1,14 @@
+@model EventPickerViewModel
+
+<form method="get" class="rd-card p-3 mb-4 d-flex flex-wrap align-items-end gap-3">
+    <div class="flex-grow-1">
+        <label for="eventId" class="form-label mb-1">Event</label>
+        <select id="eventId" name="eventId" class="form-select" onchange="this.form.submit()">
+            @foreach (var ev in Model.Events)
+            {
+                <option value="@ev.Id" selected="@(ev.Id == Model.SelectedEventId)">@ev.Name &mdash; @ev.EventDate.ToString("dd MMM yyyy")</option>
+            }
+        </select>
+    </div>
+    <noscript><button type="submit" class="btn btn-secondary">Show</button></noscript>
+</form>

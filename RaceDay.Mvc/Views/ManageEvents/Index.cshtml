@@ -1,0 +1,65 @@
+@model List<OrganiserEventSummaryDto>
+@{
+    ViewData["Title"] = "My events";
+    ViewData["Subtitle"] = "Create, edit and remove your events.";
+}
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-warning" role="alert">@ViewBag.Error</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="rd-muted mb-0">@Model.Count event@(Model.Count == 1 ? "" : "s")</p>
+    <a class="btn btn-primary" href="~/ManageEvents/Create">Create an event</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="rd-empty rd-card">
+        <div class="rd-empty-icon" aria-hidden="true">🏁</div>
+        <h3>No events yet</h3>
+        <p>Create your first event and people can start entering.</p>
+        <a class="btn btn-primary" href="~/ManageEvents/Create">Create an event</a>
+    </div>
+}
+else
+{
+    <div class="rd-card">
+        <div class="table-responsive">
+            <table class="table rd-table align-middle">
+                <thead>
+                    <tr><th></th><th>Event</th><th>Date</th><th>Where</th><th>Enrolments</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var ev in Model)
+                    {
+                        <tr>
+                            <td style="width:88px">
+                                @if (!string.IsNullOrEmpty(ev.BannerImageUrl))
+                                {
+                                    <img src="@ev.BannerImageUrl" alt="" style="width:72px;height:48px;object-fit:cover;border-radius:8px" />
+                                }
+                                else
+                                {
+                                    <span class="rd-muted small">No banner</span>
+                                }
+                            </td>
+                            <td><strong>@ev.Name</strong><div class="rd-muted small">@ev.EventType &middot; @ev.DistanceKm.ToString("0.##") km</div></td>
+                            <td>@ev.EventDate.ToString("dd MMM yyyy")</td>
+                            <td>@ev.Location</td>
+                            <td>@ev.EnrolmentCount</td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-secondary btn-sm" href="@Url.Content("~/ManageEvents/Edit/" + ev.Id)">Edit</a>
+                                <form asp-action="Delete" asp-route-id="@ev.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete this event? Its categories and enrolments will be removed too.');">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -1,0 +1,103 @@
+@model ResultsViewModel
+@{
+    ViewData["Title"] = "Results";
+    ViewData["Subtitle"] = "Capture finish times and positions once the race is run.";
+}
+
+@if (Model.Error != null)
+{
+    <div class="alert alert-warning" role="alert">@Model.Error</div>
+}
+
+@if (!Model.Events.Any())
+{
+    <div class="rd-empty rd-card">
+        <div class="rd-empty-icon" aria-hidden="true">🏁</div>
+        <h3>Create an event first</h3>
+        <p>Results are recorded against the people entered in your events.</p>
+        <a class="btn btn-primary" href="~/ManageEvents/Create">Create an event</a>
+    </div>
+}
+else
+{
+    <partial name="_EventPicker" model="Model" />
+
+    @if (Model.SelectedEvent != null && !Model.CanRecord)
+    {
+        <div class="alert alert-info" role="alert">
+            This event is on <strong>@Model.SelectedEvent.EventDate.ToString("dd MMM yyyy")</strong>. Results can be recorded once that date arrives.
+        </div>
+    }
+
+    <div class="rd-section-head">
+        <h2>Waiting for a result</h2>
+        <span class="rd-stripes" aria-hidden="true"><i></i><i></i><i></i></span>
+    </div>
+
+    @if (!Model.Awaiting.Any())
+    {
+        <p class="rd-muted mb-4">Nobody is waiting for a result in this event.</p>
+    }
+    else
+    {
+        <div class="rd-card mb-4">
+            <div class="table-responsive">
+                <table class="table rd-table align-middle">
+                    <thead><tr><th>Participant</th><th>Category</th><th>Finish time and position</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Model.Awaiting)
+                        {
+                            <tr>
+                                <td><strong>@e.ParticipantName</strong></td>
+                                <td>@e.CategoryName</td>
+                                <td>
+                                    <form asp-action="Record" method="post" class="d-flex flex-wrap gap-2 align-items-center">
+                                        <input type="hidden" name="eventId" value="@Model.SelectedEventId" />
+                                        <input type="hidden" name="enrolmentId" value="@e.Id" />
+                                        <input name="finishTime" class="form-control" style="width:9rem" placeholder="hh:mm:ss"
+                                               pattern="\d{1,2}:[0-5]\d:[0-5]\d" title="Use hh:mm:ss, for example 01:38:47"
+                                               aria-label="Finish time" required disabled="@(Model.CanRecord ? null : "disabled")" />
+                                        <input name="position" type="number" min="1" class="form-control" style="width:6rem" placeholder="Pos."
+                                               aria-label="Finishing position" required disabled="@(Model.CanRecord ? null : "disabled")" />
+                                        <button type="submit" class="btn btn-primary btn-sm" disabled="@(Model.CanRecord ? null : "disabled")">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <div class="rd-section-head">
+        <h2>Recorded results</h2>
+        <span class="rd-stripes" aria-hidden="true"><i></i><i></i><i></i></span>
+    </div>
+
+    @if (!Model.Recorded.Any())
+    {
+        <p class="rd-muted">No results recorded for this event yet.</p>
+    }
+    else
+    {
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table align-middle">
+                    <thead><tr><th>Position</th><th>Participant</th><th>Category</th><th>Finish time</th></tr></thead>
+                    <tbody>
+                        @foreach (var r in Model.Recorded)
+                        {
+                            <tr>
+                                <td><strong>@r.Position</strong></td>
+                                <td>@r.ParticipantName</td>
+                                <td>@r.CategoryName</td>
+                                <td>@r.FinishTime.ToString("c")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

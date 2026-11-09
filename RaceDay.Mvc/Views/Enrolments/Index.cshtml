@@ -1,0 +1,57 @@
+@model EnrolmentsViewModel
+@{
+    ViewData["Title"] = "Enrolments";
+    ViewData["Subtitle"] = "Everyone who has entered your events, and which category they chose.";
+}
+
+@if (Model.Error != null)
+{
+    <div class="alert alert-warning" role="alert">@Model.Error</div>
+}
+
+@if (!Model.Events.Any())
+{
+    <div class="rd-empty rd-card">
+        <div class="rd-empty-icon" aria-hidden="true">🏁</div>
+        <h3>Create an event first</h3>
+        <p>Once you have an event and people enter it, they'll show up here.</p>
+        <a class="btn btn-primary" href="~/ManageEvents/Create">Create an event</a>
+    </div>
+}
+else
+{
+    <partial name="_EventPicker" model="Model" />
+
+    @if (!Model.Enrolments.Any())
+    {
+        <div class="rd-empty rd-card">
+            <div class="rd-empty-icon" aria-hidden="true">👟</div>
+            <h3>Nobody has entered yet</h3>
+            <p>Entries appear here as soon as participants enrol.</p>
+        </div>
+    }
+    else
+    {
+        var confirmed = Model.Enrolments.Count(e => e.Status == "Confirmed");
+        <p class="rd-muted">@Model.Enrolments.Count enrolment@(Model.Enrolments.Count == 1 ? "" : "s") &middot; @confirmed confirmed</p>
+
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table align-middle">
+                    <thead><tr><th>Participant</th><th>Category</th><th>Entered on</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Model.Enrolments)
+                        {
+                            <tr>
+                                <td><strong>@e.ParticipantName</strong></td>
+                                <td>@e.CategoryName</td>
+                                <td>@e.EnrolmentDate.ToString("dd MMM yyyy")</td>
+                                <td><span class="rd-status rd-status-@e.Status.ToLowerInvariant()">@e.Status</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

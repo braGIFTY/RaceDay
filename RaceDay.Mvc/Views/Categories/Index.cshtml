@@ -1,0 +1,82 @@
+@model CategoriesViewModel
+@{
+    ViewData["Title"] = "Categories";
+    ViewData["Subtitle"] = "The age or distance groups people choose when they enter.";
+}
+
+@if (Model.Error != null)
+{
+    <div class="alert alert-warning" role="alert">@Model.Error</div>
+}
+
+@if (!Model.Events.Any())
+{
+    <div class="rd-empty rd-card">
+        <div class="rd-empty-icon" aria-hidden="true">🏁</div>
+        <h3>Create an event first</h3>
+        <p>Categories belong to an event, so you'll need one before you can add them.</p>
+        <a class="btn btn-primary" href="~/ManageEvents/Create">Create an event</a>
+    </div>
+}
+else
+{
+    <partial name="_EventPicker" model="Model" />
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            @if (!Model.Categories.Any())
+            {
+                <div class="rd-empty rd-card">
+                    <div class="rd-empty-icon" aria-hidden="true">🏷️</div>
+                    <h3>No categories yet</h3>
+                    <p>Add at least one, such as 10km or Under 20, so people can enter this event.</p>
+                </div>
+            }
+            else
+            {
+                <div class="rd-card">
+                    <div class="table-responsive">
+                        <table class="table rd-table align-middle">
+                            <thead><tr><th>Category</th><th>Description</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var c in Model.Categories)
+                                {
+                                    <tr>
+                                        <td><strong>@c.Name</strong></td>
+                                        <td class="rd-muted">@c.Description</td>
+                                        <td class="text-end">
+                                            <form asp-action="Delete" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Delete this category? People already entered in it will lose their entry.');">
+                                                <input type="hidden" name="id" value="@c.Id" />
+                                                <input type="hidden" name="eventId" value="@Model.SelectedEventId" />
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-5">
+            <div class="rd-card p-4">
+                <h3>Add a category</h3>
+                <form asp-action="Add" method="post" class="mt-3">
+                    <input type="hidden" name="eventId" value="@Model.SelectedEventId" />
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" name="name" class="form-control" maxlength="50" required placeholder="e.g. 10km, Under 20, Senior" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description (optional)</label>
+                        <input id="description" name="description" class="form-control" maxlength="255" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
